@@ -1,0 +1,25 @@
+node_modules/
+# Keep environment variables out of version control
+.env
+serviceAccountKey.json
+.DS_Store
+../.DS_Store
+
+data
+.dockerignore
+prisma/migrations
+
+dist
+dist-ssr
+*.local
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?

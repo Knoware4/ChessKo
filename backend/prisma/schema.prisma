@@ -1,0 +1,221 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  shadowDatabaseUrl = env("SHADOW_DATABASE_URL")
+}
+
+model Player {
+  id                   String                   @id @default(uuid())
+  email                String                   @unique
+  nickname             String                   @unique
+  eloRankedBlitz       Int                      @default(1400)
+  eloSpecialBlitz      Int                      @default(1400)
+  eloRankedBullet      Int                      @default(1400)
+  eloSpecialBullet     Int                      @default(1400)
+  eloRankedRapid       Int                      @default(1400)
+  eloSpecialRapid      Int                      @default(1400)
+  eloRankedClassic     Int                      @default(1400)
+  eloSpecialClassic    Int                      @default(1400)
+  eloRankedUnlimited   Int                      @default(1400)
+  eloSpecialUnlimited  Int                      @default(1400)
+  role                 Role                     @default(USER)
+  createdAt            DateTime                 @default(now())
+  editedAt             DateTime                 @default(now())
+  deletedAt            DateTime?      
+  ongoingGameId        String?      
+  ongoingTournamentId  String?      
+  ongoingSpecialGameId String?      
+  whiteGames           Game[]                   @relation("WhiteGames")
+  blackGames           Game[]                   @relation("BlackGames")
+  tournaments          Tournament[]             @relation("Tournaments")
+  tournamentsResults   TournamentResult[]       @relation("TournamentsResults")
+  wonTournaments       Tournament[]             @relation("WonTournaments")
+  ownedTournaments     Tournament[]             @relation("OwnedTournaments")
+  specialGames         SpecialGame[]            @relation("SpecialGames")
+  specialGamesResults  SpecialGameResult[]      @relation("SpecialGameResults")
+  wonSpecialGames      SpecialGame[]            @relation("WonSpecialGames")
+  ownedSpecialGames    SpecialGame[]            @relation("OwnedSpecialGames")
+  savedConfigurations  SpecialConfiguration[]   @relation("SavedConfigurations")
+}
+
+model Game {
+  id                       String      @id @default(uuid())
+  gameMode                 GameMode
+  matchType                MatchType
+  timeControl              TimeControl
+  tcMinutes                Int
+  tcBonus                  Int
+  gameStatus               GameStatus             @default(NEW)
+  gameResult               GameResult?           
+  whiteEloBefore           Int?           
+  whiteEloAfter            Int?           
+  blackEloBefore           Int?           
+  blackEloAfter            Int?           
+  pgn                      String?                // Classic only
+  createdAt                DateTime               @default(now())
+  editedAt                 DateTime               @default(now())
+  deletedAt                DateTime?
+  startedAt                DateTime?
+  finishedAt               DateTime?
+  whitePlayerId            String
+  whitePlayer              Player                 @relation("WhiteGames", fields: [whitePlayerId], references: [id])
+  blackPlayerId            String        
+  blackPlayer              Player                 @relation("BlackGames", fields: [blackPlayerId], references: [id])
+  tournamentId             String?        
+  tournament               Tournament?            @relation("Tournament", fields: [tournamentId], references: [id])
+  specialGameId            String?        
+  specialGame              SpecialGame?           @relation("SpecialGame", fields: [specialGameId], references: [id])
+  tournamentRoundIndex     Int?
+  specialConfigurationId   String?
+  specialConfiguration     SpecialConfiguration?  @relation("ConfiguredGames", fields: [specialConfigurationId], references: [id])
+}
+
+model SpecialGame {
+  id                       String                 @id @default(uuid())
+  name                     String
+  matchType                MatchType
+  timeControl              TimeControl
+  tcMinutes                Int
+  tcBonus                  Int
+  createdAt                DateTime               @default(now())
+  editedAt                 DateTime               @default(now())
+  deletedAt                DateTime?
+  startedAt                DateTime?
+  finishedAt               DateTime?
+  ownerId                  String
+  owner                    Player                 @relation("OwnedSpecialGames", fields: [ownerId], references: [id])
+  winnerId                 String?
+  winner                   Player?                @relation("WonSpecialGames", fields: [winnerId], references: [id])
+  currentRoundIndex        Int                    @default(0)
+  totalRounds              Int                    @default(1)
+  numberOfPlayers          Int                    @default(1)
+  players                  Player[]               @relation("SpecialGames")
+  games                    Game[]                 @relation("SpecialGame")
+  specialGameResults       SpecialGameResult[]    @relation("SpecialGamesResults")
+  specialConfigurationId   String
+  specialConfiguration     SpecialConfiguration   @relation("ConfiguredSpecialGames", fields: [specialConfigurationId], references: [id])
+}
+
+model Tournament {
+  id                   String             @id @default(uuid())
+  name                 String
+  timeControl          TimeControl
+  tcMinutes            Int
+  tcBonus              Int
+  createdAt            DateTime           @default(now())
+  editedAt             DateTime           @default(now())
+  deletedAt            DateTime?
+  startedAt            DateTime?
+  finishedAt           DateTime?
+  ownerId              String
+  owner                Player             @relation("OwnedTournaments", fields: [ownerId], references: [id])
+  winnerId             String?
+  winner               Player?            @relation("WonTournaments", fields: [winnerId], references: [id])
+  currentRoundIndex    Int                @default(0)
+  totalRounds          Int                @default(9)
+  numberOfPlayers      Int                @default(1)
+  players              Player[]           @relation("Tournaments")
+  games                Game[]             @relation("Tournament")
+  tournamentResults    TournamentResult[] @relation("TournamentResults")
+}
+
+model TournamentResult {
+  id           String          @id @default(uuid())
+  playerId     String
+  player       Player          @relation("TournamentsResults", fields: [playerId], references: [id], onDelete: Cascade)
+  tournamentId String
+  tournament   Tournament      @relation("TournamentResults", fields: [tournamentId], references: [id], onDelete: Cascade)
+  resultIndex  Int
+  roundIndex   Int
+  score        Decimal         @db.Decimal(5, 1)
+  createdAt    DateTime        @default(now())
+  
+
+  @@unique([playerId, tournamentId, roundIndex])
+  @@unique([tournamentId, resultIndex, roundIndex])
+}
+
+model SpecialGameResult {
+  id            String          @id @default(uuid())
+  playerId      String
+  player        Player          @relation("SpecialGameResults", fields: [playerId], references: [id], onDelete: Cascade)
+  specialGameId String
+  specialGame   SpecialGame     @relation("SpecialGamesResults", fields: [specialGameId], references: [id], onDelete: Cascade)
+  resultIndex   Int
+  roundIndex    Int
+  score         Decimal         @db.Decimal(5, 1)
+  createdAt     DateTime        @default(now())
+  
+
+  @@unique([playerId, specialGameId, roundIndex])
+  @@unique([specialGameId, resultIndex, roundIndex])
+}
+
+model SpecialConfiguration {
+  id           String           @id @default(uuid())
+  name         String
+  savedBy      Player[]         @relation("SavedConfigurations")
+  games        Game[]           @relation("ConfiguredGames")
+  specialGames SpecialGame[]    @relation("ConfiguredSpecialGames")
+  variantKey   VariantKey
+  upgradeKeys  UpgradeKey[]
+}
+
+enum VariantKey {
+  KING_OF_THE_HILL
+  CLASSICAL
+  CHESS960
+  THREE_CHECK
+}
+
+enum UpgradeKey {
+  TIME_CHECK
+  EXTRA_TURN
+  PAWN_DASH
+  JUMP_OVER
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum GameMode {
+  CLASSIC
+  SPECIAL
+}
+
+enum MatchType {
+  FRIENDLY
+  RATED
+  TOURNAMENT
+}
+
+enum TimeControl {
+  BULLET
+  BLITZ
+  RAPID
+  CLASSIC
+}
+
+enum GameStatus {
+  NEW
+  ONGOING
+  FINISHED
+  ABORTED
+}
+
+enum Color {
+  BLACK
+  WHITE
+}
+
+enum GameResult {
+  WHITE
+  BLACK
+  DRAW
+}

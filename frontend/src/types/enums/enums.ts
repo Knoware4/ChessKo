@@ -1,0 +1,9 @@
+export type MatchType = "FRIENDLY" | "RATED" | "TOURNAMENT";
+export type GameMode = "CLASSIC" | "SPECIAL";
+export type TimeControl = "BULLET" | "BLITZ" | "RAPID" | "CLASSIC";
+export type GameResult = "WHITE" | "BLACK" | "DRAW";
+export type GameStatus = "NEW" | "ONGOING" | "FINISHED" | "ABORTED";
+export type Color = "WHITE" | "BLACK";
+export type VariantKey = "KING_OF_THE_HILL" | "CLASSICAL" | "CHESS960" | "THREE_CHECK";
+export type UpgradeKey = "TIME_CHECK" | "EXTRA_TURN" | "PAWN_DASH" | "JUMP_OVER";
+export type Promotion = "q" | "n" | "b" | "r";

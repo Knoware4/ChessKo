@@ -1,0 +1,3688 @@
+openapi: 3.1.0
+info:
+  title: Chess Platform REST API
+  version: 2.0.0
+  description: REST API for a chess platform (Players, Games, Tournaments, Special Games).
+servers:
+  - url: http://localhost:8080
+    description: Local development server
+tags:
+  - name: Players
+  - name: Games
+  - name: SpecialGames
+  - name: Tournaments
+components:
+  responses:
+    BadRequest:
+      description: Bad Request
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    Conflict:
+      description: Conflict
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    InternalError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+  schemas:
+    Message:
+      type: object
+      properties:
+        message:
+          type: string
+          example: OK
+    Pagination:
+      type: object
+      properties:
+        currentPage:
+          type: integer
+          example: 1
+        pageSize:
+          type: integer
+          example: 10
+        totalPages:
+          type: integer
+          example: 5
+        totalItemCount:
+          type: integer
+          example: 42
+      required:
+        - currentPage
+        - pageSize
+        - totalPages
+        - totalItemCount
+    ErrorResponse:
+      allOf:
+        - $ref: "#/components/schemas/Message"
+        - type: object
+          properties:
+            error:
+              type: string
+              example: Bad Request
+    GameMode:
+      type: string
+      enum:
+        - CLASSIC
+        - SPECIAL
+    MatchType:
+      type: string
+      enum:
+        - FRIENDLY
+        - RATED
+        - TOURNAMENT
+    TimeControl:
+      type: string
+      enum:
+        - BULLET
+        - BLITZ
+        - RAPID
+        - CLASSIC
+    GameStatus:
+      type: string
+      enum:
+        - NEW
+        - ONGOING
+        - FINISHED
+        - ABORTED
+    GameResult:
+      type: string
+      enum:
+        - WHITE
+        - BLACK
+        - DRAW
+    Role:
+      type: string
+      enum:
+        - USER
+        - ADMIN
+    Color:
+      type: string
+      enum:
+        - BLACK
+        - WHITE
+    VariantKey:
+      type: string
+      enum:
+        - KING_OF_THE_HILL
+        - CLASSICAL
+        - CHESS960
+        - THREE_CHECK
+    UpgradeKey:
+      type: string
+      enum:
+        - TIME_CHECK
+        - EXTRA_TURN
+        - PAWN_DASH
+        - JUMP_OVER
+    PlayerLess:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        nickname:
+          type: string
+        eloRankedBlitz:
+          type: integer
+        eloSpecialBlitz:
+          type: integer
+        eloRankedBullet:
+          type: integer
+        eloSpecialBullet:
+          type: integer
+        eloRankedRapid:
+          type: integer
+        eloSpecialRapid:
+          type: integer
+        eloRankedClassic:
+          type: integer
+        eloSpecialClassic:
+          type: integer
+        eloRankedUnlimited:
+          type: integer
+        eloSpecialUnlimited:
+          type: integer
+        ongoingGameId:
+          type: string
+          nullable: true
+          format: uuid
+        ongoingTournamentId:
+          type: string
+          nullable: true
+          format: uuid
+        ongoingSpecialGameId:
+          type: string
+          nullable: true
+          format: uuid
+        createdAt:
+          type: string
+          format: date-time
+        editedAt:
+          type: string
+          format: date-time
+        deletedAt:
+          type: string
+          nullable: true
+          format: date-time
+      required:
+        - id
+        - nickname
+        - eloRankedBlitz
+        - eloSpecialBlitz
+        - eloRankedBullet
+        - eloSpecialBullet
+        - eloRankedRapid
+        - eloSpecialRapid
+        - eloRankedClassic
+        - eloSpecialClassic
+        - eloRankedUnlimited
+        - eloSpecialUnlimited
+        - createdAt
+        - editedAt
+    PlayerNormal:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        nickname:
+          type: string
+        eloRankedBlitz:
+          type: integer
+        eloSpecialBlitz:
+          type: integer
+        eloRankedBullet:
+          type: integer
+        eloSpecialBullet:
+          type: integer
+        eloRankedRapid:
+          type: integer
+        eloSpecialRapid:
+          type: integer
+        eloRankedClassic:
+          type: integer
+        eloSpecialClassic:
+          type: integer
+        eloRankedUnlimited:
+          type: integer
+        eloSpecialUnlimited:
+          type: integer
+        ongoingGameId:
+          type: string
+          nullable: true
+          format: uuid
+        ongoingTournamentId:
+          type: string
+          nullable: true
+          format: uuid
+        ongoingSpecialGameId:
+          type: string
+          nullable: true
+          format: uuid
+        createdAt:
+          type: string
+          format: date-time
+        editedAt:
+          type: string
+          format: date-time
+        deletedAt:
+          type: string
+          nullable: true
+          format: date-time
+        email:
+          type: string
+          format: email
+        role:
+          type: string
+      required:
+        - id
+        - nickname
+        - eloRankedBlitz
+        - eloSpecialBlitz
+        - eloRankedBullet
+        - eloSpecialBullet
+        - eloRankedRapid
+        - eloSpecialRapid
+        - eloRankedClassic
+        - eloSpecialClassic
+        - eloRankedUnlimited
+        - eloSpecialUnlimited
+        - createdAt
+        - editedAt
+        - email
+        - role
+    PlayerCreate:
+      type: object
+      properties:
+        nickname:
+          type: string
+          minLength: 3
+          maxLength: 255
+        email:
+          type: string
+          format: email
+        eloRankedBlitz:
+          type: integer
+          minimum: 0
+          exclusiveMinimum: true
+        eloSpecialBlitz:
+          type: integer
+          minimum: 0
+          exclusiveMinimum: true
+        eloRankedBullet:
+          type: integer
+          minimum: 0
+          exclusiveMinimum: true
+        eloSpecialBullet:
+          type: integer
+          minimum: 0
+          exclusiveMinimum: true
+        eloRankedRapid:
+          type: integer
+          minimum: 0
+          exclusiveMinimum: true
+        eloSpecialRapid:
+          type: integer
+          minimum: 0
+          exclusiveMinimum: true
+        eloRankedClassic:
+          type: integer
+          minimum: 0
+          exclusiveMinimum: true
+        eloSpecialClassic:
+          type: integer
+          minimum: 0
+          exclusiveMinimum: true
+        eloRankedUnlimited:
+          type: integer
+          minimum: 0
+          exclusiveMinimum: true
+        eloSpecialUnlimited:
+          type: integer
+          minimum: 0
+          exclusiveMinimum: true
+        role:
+          type: string
+      required:
+        - nickname
+        - email
+        - role
+    PlayerUpdate:
+      type: object
+      properties:
+        nickname:
+          type: string
+          minLength: 3
+          maxLength: 255
+        email:
+          type: string
+          format: email
+        eloRankedBlitz:
+          type: integer
+          minimum: 0
+          exclusiveMinimum: true
+        eloSpecialBlitz:
+          type: integer
+          minimum: 0
+          exclusiveMinimum: true
+        eloRankedBullet:
+          type: integer
+          minimum: 0
+          exclusiveMinimum: true
+        eloSpecialBullet:
+          type: integer
+          minimum: 0
+          exclusiveMinimum: true
+        eloRankedRapid:
+          type: integer
+          minimum: 0
+          exclusiveMinimum: true
+        eloSpecialRapid:
+          type: integer
+          minimum: 0
+          exclusiveMinimum: true
+        eloRankedClassic:
+          type: integer
+          minimum: 0
+          exclusiveMinimum: true
+        eloSpecialClassic:
+          type: integer
+          minimum: 0
+          exclusiveMinimum: true
+        eloRankedUnlimited:
+          type: integer
+          minimum: 0
+          exclusiveMinimum: true
+        eloSpecialUnlimited:
+          type: integer
+          minimum: 0
+          exclusiveMinimum: true
+        role:
+          type: string
+        ongoingGameId:
+          type: string
+          nullable: true
+          format: uuid
+        ongoingTournamentId:
+          type: string
+          nullable: true
+          format: uuid
+        ongoingSpecialGameId:
+          type: string
+          nullable: true
+          format: uuid
+    SinglePlayerResponse:
+      allOf:
+        - $ref: "#/components/schemas/Message"
+        - type: object
+          properties:
+            item:
+              $ref: "#/components/schemas/PlayerNormal"
+          required:
+            - item
+    MultiPlayerLessResponse:
+      allOf:
+        - $ref: "#/components/schemas/Message"
+        - type: object
+          properties:
+            items:
+              type: array
+              items:
+                $ref: "#/components/schemas/PlayerLess"
+          required:
+            - items
+    PaginatedPlayerLessResponse:
+      allOf:
+        - $ref: "#/components/schemas/MultiPlayerLessResponse"
+        - type: object
+          properties:
+            pagination:
+              $ref: "#/components/schemas/Pagination"
+          required:
+            - pagination
+    MultiPlayerNormalResponse:
+      allOf:
+        - $ref: "#/components/schemas/Message"
+        - type: object
+          properties:
+            items:
+              type: array
+              items:
+                $ref: "#/components/schemas/PlayerNormal"
+          required:
+            - items
+    PaginatedPlayerNormalResponse:
+      allOf:
+        - $ref: "#/components/schemas/MultiPlayerNormalResponse"
+        - type: object
+          properties:
+            pagination:
+              $ref: "#/components/schemas/Pagination"
+          required:
+            - pagination
+    SpecialConfiguration:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        variantKey:
+          type: string
+          enum:
+            - KING_OF_THE_HILL
+            - CLASSICAL
+            - CHESS960
+            - THREE_CHECK
+        upgradeKeys:
+          type: array
+          items:
+            type: string
+            enum:
+              - TIME_CHECK
+              - EXTRA_TURN
+              - PAWN_DASH
+              - JUMP_OVER
+      required:
+        - id
+        - name
+        - variantKey
+        - upgradeKeys
+    SpecialConfigurationCreate:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 3
+          maxLength: 255
+        variantKey:
+          type: string
+          enum:
+            - KING_OF_THE_HILL
+            - CLASSICAL
+            - CHESS960
+            - THREE_CHECK
+        upgradeKeys:
+          type: array
+          items:
+            type: string
+            enum:
+              - TIME_CHECK
+              - EXTRA_TURN
+              - PAWN_DASH
+              - JUMP_OVER
+      required:
+        - name
+        - variantKey
+        - upgradeKeys
+    MultiSpecialConfigurationResponse:
+      allOf:
+        - $ref: "#/components/schemas/Message"
+        - type: object
+          properties:
+            items:
+              type: array
+              items:
+                $ref: "#/components/schemas/SpecialConfiguration"
+          required:
+            - items
+    PaginatedSpecialConfigurationResponse:
+      allOf:
+        - $ref: "#/components/schemas/MultiSpecialConfigurationResponse"
+        - type: object
+          properties:
+            pagination:
+              $ref: "#/components/schemas/Pagination"
+          required:
+            - pagination
+    GamePlayer:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        nickname:
+          type: string
+        eloRankedBlitz:
+          type: integer
+        eloSpecialBlitz:
+          type: integer
+        eloRankedBullet:
+          type: integer
+        eloSpecialBullet:
+          type: integer
+        eloRankedRapid:
+          type: integer
+        eloSpecialRapid:
+          type: integer
+        eloRankedClassic:
+          type: integer
+        eloSpecialClassic:
+          type: integer
+        eloRankedUnlimited:
+          type: integer
+        eloSpecialUnlimited:
+          type: integer
+        ongoingGameId:
+          type: string
+          nullable: true
+          format: uuid
+        ongoingTournamentId:
+          type: string
+          nullable: true
+          format: uuid
+        ongoingSpecialGameId:
+          type: string
+          nullable: true
+          format: uuid
+        createdAt:
+          type: string
+          format: date-time
+        editedAt:
+          type: string
+          format: date-time
+        deletedAt:
+          type: string
+          nullable: true
+          format: date-time
+        email:
+          type: string
+          format: email
+        role:
+          type: string
+      required:
+        - id
+        - nickname
+        - eloRankedBlitz
+        - eloSpecialBlitz
+        - eloRankedBullet
+        - eloSpecialBullet
+        - eloRankedRapid
+        - eloSpecialRapid
+        - eloRankedClassic
+        - eloSpecialClassic
+        - eloRankedUnlimited
+        - eloSpecialUnlimited
+        - createdAt
+        - editedAt
+        - email
+        - role
+    Game:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        gameMode:
+          type: string
+        matchType:
+          type: string
+        timeControl:
+          type: string
+        tcMinutes:
+          type: integer
+        tcBonus:
+          type: integer
+        gameStatus:
+          type: string
+        gameResult:
+          type: string
+          nullable: true
+        whitePlayer:
+          $ref: "#/components/schemas/GamePlayer"
+        blackPlayer:
+          $ref: "#/components/schemas/GamePlayer"
+        whiteEloBefore:
+          type: integer
+        blackEloBefore:
+          type: integer
+        whiteEloAfter:
+          type: integer
+          nullable: true
+        blackEloAfter:
+          type: integer
+          nullable: true
+        pgn:
+          type: string
+          nullable: true
+        startedAt:
+          type: string
+          nullable: true
+          format: date-time
+        finishedAt:
+          type: string
+          nullable: true
+          format: date-time
+        tournamentId:
+          type: string
+          nullable: true
+          format: uuid
+        tournamentRoundIndex:
+          type: integer
+          nullable: true
+        specialConfiguration:
+          $ref: "#/components/schemas/SpecialConfiguration"
+        createdAt:
+          type: string
+          format: date-time
+        editedAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - gameMode
+        - matchType
+        - timeControl
+        - tcMinutes
+        - tcBonus
+        - gameStatus
+        - whitePlayer
+        - blackPlayer
+        - whiteEloBefore
+        - blackEloBefore
+        - specialConfiguration
+        - createdAt
+        - editedAt
+    GameCreate:
+      type: object
+      properties:
+        gameMode:
+          type: string
+        matchType:
+          type: string
+        tcMinutes:
+          type: integer
+          minimum: 1
+        tcBonus:
+          type: integer
+          nullable: true
+          minimum: 0
+        gameStatus:
+          type: string
+        pgn:
+          type: string
+          nullable: true
+        player1Id:
+          type: string
+          format: uuid
+        player2Id:
+          type: string
+          format: uuid
+        whitePlayerId:
+          type: string
+          format: uuid
+        blackPlayerId:
+          type: string
+          format: uuid
+        tournamentId:
+          type: string
+          format: uuid
+        tournamentRoundIndex:
+          type: integer
+          nullable: true
+          minimum: 0
+        specialConfigurationId:
+          type: string
+          format: uuid
+      required:
+        - gameMode
+        - matchType
+        - tcMinutes
+        - tcBonus
+        - player1Id
+        - player2Id
+    GameUpdate:
+      type: object
+      properties:
+        gameStatus:
+          type: string
+        gameMode:
+          type: string
+        matchType:
+          type: string
+        tcMinutes:
+          type: integer
+          minimum: 1
+        tcBonus:
+          type: integer
+          nullable: true
+          minimum: 0
+        gameResult:
+          type: string
+        whiteEloAfter:
+          type: integer
+          minimum: 0
+          exclusiveMinimum: true
+        blackEloAfter:
+          type: integer
+          minimum: 0
+          exclusiveMinimum: true
+        pgn:
+          type: string
+          nullable: true
+        startedAt:
+          type: string
+        finishedAt:
+          type: string
+        tournamentId:
+          type: string
+          format: uuid
+        tournamentRoundIndex:
+          type: integer
+          nullable: true
+          minimum: 0
+    SingleGameResponse:
+      allOf:
+        - $ref: "#/components/schemas/Message"
+        - type: object
+          properties:
+            item:
+              $ref: "#/components/schemas/Game"
+          required:
+            - item
+    MultiGameResponse:
+      allOf:
+        - $ref: "#/components/schemas/Message"
+        - type: object
+          properties:
+            items:
+              type: array
+              items:
+                $ref: "#/components/schemas/Game"
+          required:
+            - items
+    PaginatedGameResponse:
+      allOf:
+        - $ref: "#/components/schemas/MultiGameResponse"
+        - type: object
+          properties:
+            pagination:
+              $ref: "#/components/schemas/Pagination"
+          required:
+            - pagination
+    Tournament:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        gameMode:
+          type: string
+        timeControl:
+          type: string
+        tcMinutes:
+          type: integer
+        tcBonus:
+          type: integer
+        ownerId:
+          type: string
+          format: uuid
+        winnerId:
+          type: string
+          nullable: true
+          format: uuid
+        startedAt:
+          type: string
+          nullable: true
+          format: date-time
+        finishedAt:
+          type: string
+          nullable: true
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+        editedAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - name
+        - gameMode
+        - timeControl
+        - tcMinutes
+        - tcBonus
+        - ownerId
+        - createdAt
+        - editedAt
+    TournamentCreate:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 3
+          maxLength: 255
+        tcMinutes:
+          type: integer
+          minimum: 1
+        tcBonus:
+          type: integer
+          nullable: true
+          minimum: 0
+        totalRounds:
+          type: integer
+          minimum: 3
+        ownerId:
+          type: string
+          format: uuid
+        playerIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+        specialConfiguration:
+          type: string
+      required:
+        - name
+        - tcMinutes
+        - tcBonus
+        - ownerId
+        - playerIds
+    TournamentUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 3
+          maxLength: 255
+        timeControl:
+          type: string
+        tcMinutes:
+          type: integer
+          minimum: 1
+        tcBonus:
+          type: integer
+          nullable: true
+          minimum: 0
+        owner:
+          type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+            nickname:
+              type: string
+              minLength: 3
+              maxLength: 255
+            email:
+              type: string
+              format: email
+            eloRankedBlitz:
+              type: integer
+              minimum: 0
+              exclusiveMinimum: true
+            eloSpecialBlitz:
+              type: integer
+              minimum: 0
+              exclusiveMinimum: true
+            eloRankedBullet:
+              type: integer
+              minimum: 0
+              exclusiveMinimum: true
+            eloSpecialBullet:
+              type: integer
+              minimum: 0
+              exclusiveMinimum: true
+            eloRankedRapid:
+              type: integer
+              minimum: 0
+              exclusiveMinimum: true
+            eloSpecialRapid:
+              type: integer
+              minimum: 0
+              exclusiveMinimum: true
+            eloRankedClassic:
+              type: integer
+              minimum: 0
+              exclusiveMinimum: true
+            eloSpecialClassic:
+              type: integer
+              minimum: 0
+              exclusiveMinimum: true
+            eloRankedUnlimited:
+              type: integer
+              minimum: 0
+              exclusiveMinimum: true
+            eloSpecialUnlimited:
+              type: integer
+              minimum: 0
+              exclusiveMinimum: true
+            role:
+              type: string
+            createdAt:
+              type: string
+            editedAt:
+              type: string
+            deletedAt:
+              type: string
+              nullable: true
+            ongoingGameId:
+              type: string
+              nullable: true
+              format: uuid
+            ongoingTournamentId:
+              type: string
+              nullable: true
+              format: uuid
+          required:
+            - id
+            - nickname
+            - email
+            - eloRankedBlitz
+            - eloSpecialBlitz
+            - eloRankedBullet
+            - eloSpecialBullet
+            - eloRankedRapid
+            - eloSpecialRapid
+            - eloRankedClassic
+            - eloSpecialClassic
+            - eloRankedUnlimited
+            - eloSpecialUnlimited
+            - role
+            - createdAt
+            - editedAt
+        winner:
+          type: object
+          nullable: true
+          properties:
+            id:
+              type: string
+              format: uuid
+            nickname:
+              type: string
+              minLength: 3
+              maxLength: 255
+            email:
+              type: string
+              format: email
+            eloRankedBlitz:
+              type: integer
+              minimum: 0
+              exclusiveMinimum: true
+            eloSpecialBlitz:
+              type: integer
+              minimum: 0
+              exclusiveMinimum: true
+            eloRankedBullet:
+              type: integer
+              minimum: 0
+              exclusiveMinimum: true
+            eloSpecialBullet:
+              type: integer
+              minimum: 0
+              exclusiveMinimum: true
+            eloRankedRapid:
+              type: integer
+              minimum: 0
+              exclusiveMinimum: true
+            eloSpecialRapid:
+              type: integer
+              minimum: 0
+              exclusiveMinimum: true
+            eloRankedClassic:
+              type: integer
+              minimum: 0
+              exclusiveMinimum: true
+            eloSpecialClassic:
+              type: integer
+              minimum: 0
+              exclusiveMinimum: true
+            eloRankedUnlimited:
+              type: integer
+              minimum: 0
+              exclusiveMinimum: true
+            eloSpecialUnlimited:
+              type: integer
+              minimum: 0
+              exclusiveMinimum: true
+            role:
+              type: string
+            createdAt:
+              type: string
+            editedAt:
+              type: string
+            deletedAt:
+              type: string
+              nullable: true
+            ongoingGameId:
+              type: string
+              nullable: true
+              format: uuid
+            ongoingTournamentId:
+              type: string
+              nullable: true
+              format: uuid
+          required:
+            - id
+            - nickname
+            - email
+            - eloRankedBlitz
+            - eloSpecialBlitz
+            - eloRankedBullet
+            - eloSpecialBullet
+            - eloRankedRapid
+            - eloSpecialRapid
+            - eloRankedClassic
+            - eloSpecialClassic
+            - eloRankedUnlimited
+            - eloSpecialUnlimited
+            - role
+            - createdAt
+            - editedAt
+        startedAt:
+          type: string
+          nullable: true
+        finishedAt:
+          type: string
+          nullable: true
+        currentRoundIndex:
+          type: integer
+          nullable: true
+          minimum: 0
+        totalRounds:
+          type: integer
+          minimum: 3
+        numberOfPlayers:
+          type: integer
+          minimum: 1
+        specialConfiguration:
+          type: string
+        addPlayerIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+        removePlayerIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+        gameIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+        ownerId:
+          type: string
+          format: uuid
+        winnerId:
+          type: string
+          format: uuid
+    TournamentResult:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        player:
+          $ref: "#/components/schemas/PlayerNormal"
+        tournament:
+          type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+            name:
+              type: string
+            gameMode:
+              type: string
+            timeControl:
+              type: string
+            tcMinutes:
+              type: integer
+            tcBonus:
+              type: integer
+            ownerId:
+              type: string
+              format: uuid
+            winnerId:
+              type: string
+              nullable: true
+              format: uuid
+            startedAt:
+              type: string
+              nullable: true
+              format: date-time
+            finishedAt:
+              type: string
+              nullable: true
+              format: date-time
+            createdAt:
+              type: string
+              format: date-time
+            editedAt:
+              type: string
+              format: date-time
+          required:
+            - id
+            - name
+            - gameMode
+            - timeControl
+            - tcMinutes
+            - tcBonus
+            - ownerId
+            - createdAt
+            - editedAt
+        resultIndex:
+          type: integer
+        roundIndex:
+          type: integer
+        score:
+          type: number
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - player
+        - tournament
+        - resultIndex
+        - roundIndex
+        - score
+        - createdAt
+    PlayerTournament:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        gameMode:
+          type: string
+        timeControl:
+          type: string
+        tcMinutes:
+          type: integer
+        tcBonus:
+          type: integer
+        ownerId:
+          type: string
+          format: uuid
+        winnerId:
+          type: string
+          nullable: true
+          format: uuid
+        startedAt:
+          type: string
+          nullable: true
+          format: date-time
+        finishedAt:
+          type: string
+          nullable: true
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+        editedAt:
+          type: string
+          format: date-time
+        playerResultIndex:
+          type: integer
+          nullable: true
+      required:
+        - id
+        - name
+        - gameMode
+        - timeControl
+        - tcMinutes
+        - tcBonus
+        - ownerId
+        - createdAt
+        - editedAt
+    SingleTournamentResponse:
+      allOf:
+        - $ref: "#/components/schemas/Message"
+        - type: object
+          properties:
+            item:
+              $ref: "#/components/schemas/Tournament"
+          required:
+            - item
+    MultiTournamentResponse:
+      allOf:
+        - $ref: "#/components/schemas/Message"
+        - type: object
+          properties:
+            items:
+              type: array
+              items:
+                $ref: "#/components/schemas/Tournament"
+          required:
+            - items
+    PaginatedTournamentResponse:
+      allOf:
+        - $ref: "#/components/schemas/MultiTournamentResponse"
+        - type: object
+          properties:
+            pagination:
+              $ref: "#/components/schemas/Pagination"
+          required:
+            - pagination
+    MultiPlayerTournamentResponse:
+      allOf:
+        - $ref: "#/components/schemas/Message"
+        - type: object
+          properties:
+            items:
+              type: array
+              items:
+                $ref: "#/components/schemas/PlayerTournament"
+          required:
+            - items
+    PaginatedPlayerTournamentResponse:
+      allOf:
+        - $ref: "#/components/schemas/MultiPlayerTournamentResponse"
+        - type: object
+          properties:
+            pagination:
+              $ref: "#/components/schemas/Pagination"
+          required:
+            - pagination
+    MultiTournamentResultResponse:
+      allOf:
+        - $ref: "#/components/schemas/Message"
+        - type: object
+          properties:
+            items:
+              type: array
+              items:
+                $ref: "#/components/schemas/TournamentResult"
+          required:
+            - items
+    PaginatedTournamentResultResponse:
+      allOf:
+        - $ref: "#/components/schemas/MultiTournamentResultResponse"
+        - type: object
+          properties:
+            pagination:
+              $ref: "#/components/schemas/Pagination"
+          required:
+            - pagination
+    SpecialGame:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        matchType:
+          type: string
+        timeControl:
+          type: string
+        tcMinutes:
+          type: integer
+        tcBonus:
+          type: integer
+        owner:
+          $ref: "#/components/schemas/PlayerNormal"
+        winner:
+          allOf:
+            - $ref: "#/components/schemas/PlayerNormal"
+            - nullable: true
+        startedAt:
+          type: string
+          nullable: true
+          format: date-time
+        finishedAt:
+          type: string
+          nullable: true
+          format: date-time
+        currentRoundIndex:
+          type: integer
+          nullable: true
+        totalRounds:
+          type: integer
+          nullable: true
+        numberOfPlayers:
+          type: integer
+        specialConfiguration:
+          $ref: "#/components/schemas/SpecialConfiguration"
+        createdAt:
+          type: string
+          format: date-time
+        editedAt:
+          type: string
+          format: date-time
+        deletedAt:
+          type: string
+          nullable: true
+          format: date-time
+      required:
+        - id
+        - name
+        - matchType
+        - timeControl
+        - tcMinutes
+        - tcBonus
+        - owner
+        - numberOfPlayers
+        - specialConfiguration
+        - createdAt
+        - editedAt
+    PlayerSpecialGame:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        matchType:
+          type: string
+        timeControl:
+          type: string
+        tcMinutes:
+          type: integer
+        tcBonus:
+          type: integer
+        owner:
+          $ref: "#/components/schemas/PlayerNormal"
+        winner:
+          allOf:
+            - $ref: "#/components/schemas/PlayerNormal"
+            - nullable: true
+        startedAt:
+          type: string
+          nullable: true
+          format: date-time
+        finishedAt:
+          type: string
+          nullable: true
+          format: date-time
+        currentRoundIndex:
+          type: integer
+          nullable: true
+        totalRounds:
+          type: integer
+          nullable: true
+        numberOfPlayers:
+          type: integer
+        specialConfiguration:
+          $ref: "#/components/schemas/SpecialConfiguration"
+        createdAt:
+          type: string
+          format: date-time
+        editedAt:
+          type: string
+          format: date-time
+        deletedAt:
+          type: string
+          nullable: true
+          format: date-time
+        playerResultIndex:
+          type: integer
+          nullable: true
+      required:
+        - id
+        - name
+        - matchType
+        - timeControl
+        - tcMinutes
+        - tcBonus
+        - owner
+        - numberOfPlayers
+        - specialConfiguration
+        - createdAt
+        - editedAt
+    SpecialGameCreate:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 3
+          maxLength: 255
+        tcMinutes:
+          type: integer
+          minimum: 1
+        tcBonus:
+          type: integer
+          nullable: true
+          minimum: 0
+        matchType:
+          type: string
+        totalRounds:
+          type: integer
+          minimum: 1
+        ownerId:
+          type: string
+          format: uuid
+        playerIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+        specialConfigurationId:
+          type: string
+          format: uuid
+        specialConfiguration:
+          type: string
+      required:
+        - name
+        - tcMinutes
+        - tcBonus
+        - matchType
+        - ownerId
+        - playerIds
+        - specialConfiguration
+    SpecialGameUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 3
+          maxLength: 255
+        timeControl:
+          type: string
+        matchType:
+          type: string
+        tcMinutes:
+          type: integer
+          minimum: 1
+        tcBonus:
+          type: integer
+          nullable: true
+          minimum: 0
+        owner:
+          type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+            nickname:
+              type: string
+              minLength: 3
+              maxLength: 255
+            email:
+              type: string
+              format: email
+            eloRankedBlitz:
+              type: integer
+              minimum: 0
+              exclusiveMinimum: true
+            eloSpecialBlitz:
+              type: integer
+              minimum: 0
+              exclusiveMinimum: true
+            eloRankedBullet:
+              type: integer
+              minimum: 0
+              exclusiveMinimum: true
+            eloSpecialBullet:
+              type: integer
+              minimum: 0
+              exclusiveMinimum: true
+            eloRankedRapid:
+              type: integer
+              minimum: 0
+              exclusiveMinimum: true
+            eloSpecialRapid:
+              type: integer
+              minimum: 0
+              exclusiveMinimum: true
+            eloRankedClassic:
+              type: integer
+              minimum: 0
+              exclusiveMinimum: true
+            eloSpecialClassic:
+              type: integer
+              minimum: 0
+              exclusiveMinimum: true
+            eloRankedUnlimited:
+              type: integer
+              minimum: 0
+              exclusiveMinimum: true
+            eloSpecialUnlimited:
+              type: integer
+              minimum: 0
+              exclusiveMinimum: true
+            role:
+              type: string
+            createdAt:
+              type: string
+            editedAt:
+              type: string
+            deletedAt:
+              type: string
+              nullable: true
+            ongoingGameId:
+              type: string
+              nullable: true
+              format: uuid
+            ongoingTournamentId:
+              type: string
+              nullable: true
+              format: uuid
+          required:
+            - id
+            - nickname
+            - email
+            - eloRankedBlitz
+            - eloSpecialBlitz
+            - eloRankedBullet
+            - eloSpecialBullet
+            - eloRankedRapid
+            - eloSpecialRapid
+            - eloRankedClassic
+            - eloSpecialClassic
+            - eloRankedUnlimited
+            - eloSpecialUnlimited
+            - role
+            - createdAt
+            - editedAt
+        winner:
+          type: object
+          nullable: true
+          properties:
+            id:
+              type: string
+              format: uuid
+            nickname:
+              type: string
+              minLength: 3
+              maxLength: 255
+            email:
+              type: string
+              format: email
+            eloRankedBlitz:
+              type: integer
+              minimum: 0
+              exclusiveMinimum: true
+            eloSpecialBlitz:
+              type: integer
+              minimum: 0
+              exclusiveMinimum: true
+            eloRankedBullet:
+              type: integer
+              minimum: 0
+              exclusiveMinimum: true
+            eloSpecialBullet:
+              type: integer
+              minimum: 0
+              exclusiveMinimum: true
+            eloRankedRapid:
+              type: integer
+              minimum: 0
+              exclusiveMinimum: true
+            eloSpecialRapid:
+              type: integer
+              minimum: 0
+              exclusiveMinimum: true
+            eloRankedClassic:
+              type: integer
+              minimum: 0
+              exclusiveMinimum: true
+            eloSpecialClassic:
+              type: integer
+              minimum: 0
+              exclusiveMinimum: true
+            eloRankedUnlimited:
+              type: integer
+              minimum: 0
+              exclusiveMinimum: true
+            eloSpecialUnlimited:
+              type: integer
+              minimum: 0
+              exclusiveMinimum: true
+            role:
+              type: string
+            createdAt:
+              type: string
+            editedAt:
+              type: string
+            deletedAt:
+              type: string
+              nullable: true
+            ongoingGameId:
+              type: string
+              nullable: true
+              format: uuid
+            ongoingTournamentId:
+              type: string
+              nullable: true
+              format: uuid
+          required:
+            - id
+            - nickname
+            - email
+            - eloRankedBlitz
+            - eloSpecialBlitz
+            - eloRankedBullet
+            - eloSpecialBullet
+            - eloRankedRapid
+            - eloSpecialRapid
+            - eloRankedClassic
+            - eloSpecialClassic
+            - eloRankedUnlimited
+            - eloSpecialUnlimited
+            - role
+            - createdAt
+            - editedAt
+        startedAt:
+          type: string
+          nullable: true
+        finishedAt:
+          type: string
+          nullable: true
+        currentRoundIndex:
+          type: integer
+          nullable: true
+          minimum: 0
+        totalRounds:
+          type: integer
+          minimum: 1
+        numberOfPlayers:
+          type: integer
+          minimum: 1
+        addPlayerIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+        removePlayerIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+        gameIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+        ownerId:
+          type: string
+          format: uuid
+        winnerId:
+          type: string
+          format: uuid
+    SingleSpecialGameResponse:
+      allOf:
+        - $ref: "#/components/schemas/Message"
+        - type: object
+          properties:
+            item:
+              $ref: "#/components/schemas/SpecialGame"
+          required:
+            - item
+    MultiSpecialGameResponse:
+      allOf:
+        - $ref: "#/components/schemas/Message"
+        - type: object
+          properties:
+            items:
+              type: array
+              items:
+                $ref: "#/components/schemas/SpecialGame"
+          required:
+            - items
+    PaginatedSpecialGameResponse:
+      allOf:
+        - $ref: "#/components/schemas/MultiSpecialGameResponse"
+        - type: object
+          properties:
+            pagination:
+              $ref: "#/components/schemas/Pagination"
+          required:
+            - pagination
+    MultiPlayerSpecialGameResponse:
+      allOf:
+        - $ref: "#/components/schemas/Message"
+        - type: object
+          properties:
+            items:
+              type: array
+              items:
+                $ref: "#/components/schemas/PlayerSpecialGame"
+          required:
+            - items
+    PaginatedPlayerSpecialGameResponse:
+      allOf:
+        - $ref: "#/components/schemas/MultiPlayerSpecialGameResponse"
+        - type: object
+          properties:
+            pagination:
+              $ref: "#/components/schemas/Pagination"
+          required:
+            - pagination
+    SpecialGameResult:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        player:
+          type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+            nickname:
+              type: string
+              minLength: 3
+              maxLength: 255
+            email:
+              type: string
+              format: email
+            eloRankedBlitz:
+              type: integer
+              minimum: 0
+              exclusiveMinimum: true
+            eloSpecialBlitz:
+              type: integer
+              minimum: 0
+              exclusiveMinimum: true
+            eloRankedBullet:
+              type: integer
+              minimum: 0
+              exclusiveMinimum: true
+            eloSpecialBullet:
+              type: integer
+              minimum: 0
+              exclusiveMinimum: true
+            eloRankedRapid:
+              type: integer
+              minimum: 0
+              exclusiveMinimum: true
+            eloSpecialRapid:
+              type: integer
+              minimum: 0
+              exclusiveMinimum: true
+            eloRankedClassic:
+              type: integer
+              minimum: 0
+              exclusiveMinimum: true
+            eloSpecialClassic:
+              type: integer
+              minimum: 0
+              exclusiveMinimum: true
+            eloRankedUnlimited:
+              type: integer
+              minimum: 0
+              exclusiveMinimum: true
+            eloSpecialUnlimited:
+              type: integer
+              minimum: 0
+              exclusiveMinimum: true
+            role:
+              type: string
+            createdAt:
+              type: string
+            editedAt:
+              type: string
+            deletedAt:
+              type: string
+              nullable: true
+            ongoingGameId:
+              type: string
+              nullable: true
+              format: uuid
+            ongoingTournamentId:
+              type: string
+              nullable: true
+              format: uuid
+          required:
+            - id
+            - nickname
+            - email
+            - eloRankedBlitz
+            - eloSpecialBlitz
+            - eloRankedBullet
+            - eloSpecialBullet
+            - eloRankedRapid
+            - eloSpecialRapid
+            - eloRankedClassic
+            - eloSpecialClassic
+            - eloRankedUnlimited
+            - eloSpecialUnlimited
+            - role
+            - createdAt
+            - editedAt
+        specialGame:
+          type: object
+          properties:
+            name:
+              type: string
+              minLength: 3
+              maxLength: 255
+            timeControl:
+              type: string
+            matchType:
+              type: string
+            tcMinutes:
+              type: integer
+              minimum: 1
+            tcBonus:
+              type: integer
+              nullable: true
+              minimum: 0
+            owner:
+              type: object
+              properties:
+                id:
+                  type: string
+                  format: uuid
+                nickname:
+                  type: string
+                  minLength: 3
+                  maxLength: 255
+                email:
+                  type: string
+                  format: email
+                eloRankedBlitz:
+                  type: integer
+                  minimum: 0
+                  exclusiveMinimum: true
+                eloSpecialBlitz:
+                  type: integer
+                  minimum: 0
+                  exclusiveMinimum: true
+                eloRankedBullet:
+                  type: integer
+                  minimum: 0
+                  exclusiveMinimum: true
+                eloSpecialBullet:
+                  type: integer
+                  minimum: 0
+                  exclusiveMinimum: true
+                eloRankedRapid:
+                  type: integer
+                  minimum: 0
+                  exclusiveMinimum: true
+                eloSpecialRapid:
+                  type: integer
+                  minimum: 0
+                  exclusiveMinimum: true
+                eloRankedClassic:
+                  type: integer
+                  minimum: 0
+                  exclusiveMinimum: true
+                eloSpecialClassic:
+                  type: integer
+                  minimum: 0
+                  exclusiveMinimum: true
+                eloRankedUnlimited:
+                  type: integer
+                  minimum: 0
+                  exclusiveMinimum: true
+                eloSpecialUnlimited:
+                  type: integer
+                  minimum: 0
+                  exclusiveMinimum: true
+                role:
+                  type: string
+                createdAt:
+                  type: string
+                editedAt:
+                  type: string
+                deletedAt:
+                  type: string
+                  nullable: true
+                ongoingGameId:
+                  type: string
+                  nullable: true
+                  format: uuid
+                ongoingTournamentId:
+                  type: string
+                  nullable: true
+                  format: uuid
+              required:
+                - id
+                - nickname
+                - email
+                - eloRankedBlitz
+                - eloSpecialBlitz
+                - eloRankedBullet
+                - eloSpecialBullet
+                - eloRankedRapid
+                - eloSpecialRapid
+                - eloRankedClassic
+                - eloSpecialClassic
+                - eloRankedUnlimited
+                - eloSpecialUnlimited
+                - role
+                - createdAt
+                - editedAt
+            winner:
+              type: object
+              nullable: true
+              properties:
+                id:
+                  type: string
+                  format: uuid
+                nickname:
+                  type: string
+                  minLength: 3
+                  maxLength: 255
+                email:
+                  type: string
+                  format: email
+                eloRankedBlitz:
+                  type: integer
+                  minimum: 0
+                  exclusiveMinimum: true
+                eloSpecialBlitz:
+                  type: integer
+                  minimum: 0
+                  exclusiveMinimum: true
+                eloRankedBullet:
+                  type: integer
+                  minimum: 0
+                  exclusiveMinimum: true
+                eloSpecialBullet:
+                  type: integer
+                  minimum: 0
+                  exclusiveMinimum: true
+                eloRankedRapid:
+                  type: integer
+                  minimum: 0
+                  exclusiveMinimum: true
+                eloSpecialRapid:
+                  type: integer
+                  minimum: 0
+                  exclusiveMinimum: true
+                eloRankedClassic:
+                  type: integer
+                  minimum: 0
+                  exclusiveMinimum: true
+                eloSpecialClassic:
+                  type: integer
+                  minimum: 0
+                  exclusiveMinimum: true
+                eloRankedUnlimited:
+                  type: integer
+                  minimum: 0
+                  exclusiveMinimum: true
+                eloSpecialUnlimited:
+                  type: integer
+                  minimum: 0
+                  exclusiveMinimum: true
+                role:
+                  type: string
+                createdAt:
+                  type: string
+                editedAt:
+                  type: string
+                deletedAt:
+                  type: string
+                  nullable: true
+                ongoingGameId:
+                  type: string
+                  nullable: true
+                  format: uuid
+                ongoingTournamentId:
+                  type: string
+                  nullable: true
+                  format: uuid
+              required:
+                - id
+                - nickname
+                - email
+                - eloRankedBlitz
+                - eloSpecialBlitz
+                - eloRankedBullet
+                - eloSpecialBullet
+                - eloRankedRapid
+                - eloSpecialRapid
+                - eloRankedClassic
+                - eloSpecialClassic
+                - eloRankedUnlimited
+                - eloSpecialUnlimited
+                - role
+                - createdAt
+                - editedAt
+            startedAt:
+              type: string
+              nullable: true
+            finishedAt:
+              type: string
+              nullable: true
+            currentRoundIndex:
+              type: integer
+              nullable: true
+              minimum: 0
+            totalRounds:
+              type: integer
+              minimum: 1
+            numberOfPlayers:
+              type: integer
+              minimum: 1
+          required:
+            - name
+            - timeControl
+            - matchType
+            - tcMinutes
+            - tcBonus
+            - owner
+            - numberOfPlayers
+        resultIndex:
+          type: integer
+          nullable: true
+          minimum: 0
+        roundIndex:
+          type: integer
+          nullable: true
+          minimum: 0
+        score:
+          type: number
+          nullable: true
+          minimum: 0
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - player
+        - specialGame
+        - resultIndex
+        - roundIndex
+        - createdAt
+    MultiSpecialGameResultResponse:
+      allOf:
+        - $ref: "#/components/schemas/Message"
+        - type: object
+          properties:
+            items:
+              type: array
+              items:
+                $ref: "#/components/schemas/SpecialGameResult"
+          required:
+            - items
+    PaginatedSpecialGameResultResponse:
+      allOf:
+        - $ref: "#/components/schemas/MultiSpecialGameResultResponse"
+        - type: object
+          properties:
+            pagination:
+              $ref: "#/components/schemas/Pagination"
+          required:
+            - pagination
+  parameters: {}
+paths:
+  /players:
+    post:
+      tags:
+        - Players
+      summary: Create a new player
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PlayerCreate"
+      responses:
+        "201":
+          description: Player created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SinglePlayerResponse"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /players/user:
+    get:
+      tags:
+        - Players
+      summary: Get all players with less attributes
+      parameters:
+        - schema:
+            type: integer
+            minimum: 0
+            exclusiveMinimum: true
+          required: false
+          name: page
+          in: query
+        - schema:
+            type: integer
+            minimum: 0
+            exclusiveMinimum: true
+            maximum: 1000
+            default: 10
+          required: false
+          name: pagesize
+          in: query
+        - schema:
+            type: string
+          required: false
+          name: keyword
+          in: query
+      responses:
+        "200":
+          description: A list of players
+          content:
+            application/json:
+              schema:
+                anyOf:
+                  - $ref: "#/components/schemas/MultiPlayerLessResponse"
+                  - $ref: "#/components/schemas/PaginatedPlayerLessResponse"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /players/admin:
+    get:
+      tags:
+        - Players
+      summary: Get all players with complete attributes
+      parameters:
+        - schema:
+            type: integer
+            minimum: 0
+            exclusiveMinimum: true
+          required: false
+          name: page
+          in: query
+        - schema:
+            type: integer
+            minimum: 0
+            exclusiveMinimum: true
+            maximum: 1000
+            default: 10
+          required: false
+          name: pagesize
+          in: query
+        - schema:
+            type: string
+          required: false
+          name: keyword
+          in: query
+      responses:
+        "200":
+          description: A list of players
+          content:
+            application/json:
+              schema:
+                anyOf:
+                  - $ref: "#/components/schemas/MultiPlayerNormalResponse"
+                  - $ref: "#/components/schemas/PaginatedPlayerNormalResponse"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /players/{playerId}:
+    get:
+      tags:
+        - Players
+      summary: Get player by ID
+      parameters:
+        - schema:
+            type: string
+            format: uuid
+          required: true
+          name: playerId
+          in: path
+      responses:
+        "200":
+          description: Player found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SinglePlayerResponse"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Resource not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    patch:
+      tags:
+        - Players
+      summary: Patch player by ID
+      parameters:
+        - schema:
+            type: string
+            format: uuid
+          required: true
+          name: playerId
+          in: path
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PlayerUpdate"
+      responses:
+        "200":
+          description: Player updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SinglePlayerResponse"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Resource not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    delete:
+      tags:
+        - Players
+      summary: Delete player by ID
+      parameters:
+        - schema:
+            type: string
+            format: uuid
+          required: true
+          name: playerId
+          in: path
+      responses:
+        "204":
+          description: Player deleted
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Resource not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /players/email/{playerEmail}:
+    get:
+      tags:
+        - Players
+      summary: Get player by email
+      parameters:
+        - schema:
+            type: string
+            format: email
+          required: true
+          name: playerEmail
+          in: path
+      responses:
+        "200":
+          description: Player found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SinglePlayerResponse"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Resource not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /players/{playerId}/games:
+    get:
+      tags:
+        - Players
+      summary: Get games of a player
+      parameters:
+        - schema:
+            type: string
+            format: uuid
+          required: true
+          name: playerId
+          in: path
+        - schema:
+            type: string
+            enum:
+              - WIN
+              - LOSE
+              - DRAW
+          required: false
+          name: result
+          in: query
+        - schema:
+            type: integer
+            minimum: 0
+            exclusiveMinimum: true
+          required: false
+          name: page
+          in: query
+        - schema:
+            type: integer
+            minimum: 0
+            exclusiveMinimum: true
+            maximum: 1000
+            default: 10
+          required: false
+          name: pagesize
+          in: query
+        - schema:
+            type: string
+          required: false
+          name: keyword
+          in: query
+      responses:
+        "200":
+          description: List of player's games
+          content:
+            application/json:
+              schema:
+                anyOf:
+                  - $ref: "#/components/schemas/MultiGameResponse"
+                  - $ref: "#/components/schemas/PaginatedGameResponse"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Resource not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /players/{playerId}/tournaments:
+    get:
+      tags:
+        - Players
+      summary: Get tournaments of a player
+      parameters:
+        - schema:
+            type: string
+            format: uuid
+          required: true
+          name: playerId
+          in: path
+        - schema:
+            type: integer
+            minimum: 0
+            exclusiveMinimum: true
+          required: false
+          name: page
+          in: query
+        - schema:
+            type: integer
+            minimum: 0
+            exclusiveMinimum: true
+            maximum: 1000
+            default: 10
+          required: false
+          name: pagesize
+          in: query
+        - schema:
+            type: string
+          required: false
+          name: keyword
+          in: query
+      responses:
+        "200":
+          description: List of player's tournaments
+          content:
+            application/json:
+              schema:
+                anyOf:
+                  - $ref: "#/components/schemas/MultiPlayerTournamentResponse"
+                  - $ref: "#/components/schemas/PaginatedPlayerTournamentResponse"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Resource not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /players/{playerId}/specialGames:
+    get:
+      tags:
+        - Players
+      summary: Get special games of a player
+      parameters:
+        - schema:
+            type: string
+            format: uuid
+          required: true
+          name: playerId
+          in: path
+        - schema:
+            type: integer
+            minimum: 0
+            exclusiveMinimum: true
+          required: false
+          name: page
+          in: query
+        - schema:
+            type: integer
+            minimum: 0
+            exclusiveMinimum: true
+            maximum: 1000
+            default: 10
+          required: false
+          name: pagesize
+          in: query
+        - schema:
+            type: string
+          required: false
+          name: keyword
+          in: query
+      responses:
+        "200":
+          description: List of player's special games
+          content:
+            application/json:
+              schema:
+                anyOf:
+                  - $ref: "#/components/schemas/MultiPlayerSpecialGameResponse"
+                  - $ref: "#/components/schemas/PaginatedPlayerSpecialGameResponse"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Resource not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /players/{playerId}/configurations:
+    get:
+      tags:
+        - Players
+      summary: Get saved special configurations of a player
+      parameters:
+        - schema:
+            type: string
+            format: uuid
+          required: true
+          name: playerId
+          in: path
+        - schema:
+            type: integer
+            minimum: 0
+            exclusiveMinimum: true
+          required: false
+          name: page
+          in: query
+        - schema:
+            type: integer
+            minimum: 0
+            exclusiveMinimum: true
+            maximum: 1000
+            default: 10
+          required: false
+          name: pagesize
+          in: query
+        - schema:
+            type: string
+          required: false
+          name: keyword
+          in: query
+      responses:
+        "200":
+          description: List of player's saved configurations
+          content:
+            application/json:
+              schema:
+                anyOf:
+                  - $ref: "#/components/schemas/MultiSpecialConfigurationResponse"
+                  - $ref: "#/components/schemas/PaginatedSpecialConfigurationResponse"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Resource not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /games:
+    get:
+      tags:
+        - Games
+      summary: Get all games
+      parameters:
+        - schema:
+            type: string
+          required: false
+          name: start
+          in: query
+        - schema:
+            type: string
+          required: false
+          name: end
+          in: query
+        - schema:
+            type: string
+          required: false
+          name: gameMode
+          in: query
+        - schema:
+            type: string
+          required: false
+          name: matchType
+          in: query
+        - schema:
+            type: string
+          required: false
+          name: timeControl
+          in: query
+        - schema:
+            type: integer
+            minimum: 1
+          required: false
+          name: tcMinutes
+          in: query
+        - schema:
+            type: integer
+            nullable: true
+            minimum: 0
+          required: false
+          name: tcBonus
+          in: query
+        - schema:
+            type: string
+          required: false
+          name: gameStatus
+          in: query
+        - schema:
+            type: integer
+            minimum: 0
+            exclusiveMinimum: true
+          required: false
+          name: page
+          in: query
+        - schema:
+            type: integer
+            minimum: 0
+            exclusiveMinimum: true
+            maximum: 1000
+            default: 10
+          required: false
+          name: pagesize
+          in: query
+        - schema:
+            type: string
+          required: false
+          name: keyword
+          in: query
+      responses:
+        "200":
+          description: A list of games
+          content:
+            application/json:
+              schema:
+                anyOf:
+                  - $ref: "#/components/schemas/MultiGameResponse"
+                  - $ref: "#/components/schemas/PaginatedGameResponse"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    post:
+      tags:
+        - Games
+      summary: Create a new game
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GameCreate"
+      responses:
+        "201":
+          description: Game created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SingleGameResponse"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /games/{gameId}:
+    get:
+      tags:
+        - Games
+      summary: Get game by ID
+      parameters:
+        - schema:
+            type: string
+            format: uuid
+          required: true
+          name: gameId
+          in: path
+      responses:
+        "200":
+          description: Game found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SingleGameResponse"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Resource not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    patch:
+      tags:
+        - Games
+      summary: Patch game by ID
+      parameters:
+        - schema:
+            type: string
+            format: uuid
+          required: true
+          name: gameId
+          in: path
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GameUpdate"
+      responses:
+        "200":
+          description: Game updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SingleGameResponse"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Resource not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    delete:
+      tags:
+        - Games
+      summary: Delete game by ID
+      parameters:
+        - schema:
+            type: string
+            format: uuid
+          required: true
+          name: gameId
+          in: path
+      responses:
+        "204":
+          description: Game deleted
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Resource not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /specialGames:
+    get:
+      tags:
+        - SpecialGames
+      summary: Get all special games
+      parameters:
+        - schema:
+            type: string
+          required: false
+          name: matchType
+          in: query
+        - schema:
+            type: string
+          required: false
+          name: timeControl
+          in: query
+        - schema:
+            type: integer
+            minimum: 1
+          required: false
+          name: tcMinutes
+          in: query
+        - schema:
+            type: integer
+            nullable: true
+            minimum: 0
+          required: false
+          name: tcBonus
+          in: query
+        - schema:
+            type: boolean
+            nullable: true
+          required: false
+          name: isAvailable
+          in: query
+        - schema:
+            type: integer
+            minimum: 0
+            exclusiveMinimum: true
+          required: false
+          name: page
+          in: query
+        - schema:
+            type: integer
+            minimum: 0
+            exclusiveMinimum: true
+            maximum: 1000
+            default: 10
+          required: false
+          name: pagesize
+          in: query
+        - schema:
+            type: string
+          required: false
+          name: keyword
+          in: query
+      responses:
+        "200":
+          description: A list of special games
+          content:
+            application/json:
+              schema:
+                anyOf:
+                  - $ref: "#/components/schemas/MultiSpecialGameResponse"
+                  - $ref: "#/components/schemas/PaginatedSpecialGameResponse"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    post:
+      tags:
+        - SpecialGames
+      summary: Create a new special game
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SpecialGameCreate"
+      responses:
+        "201":
+          description: Special game created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SingleSpecialGameResponse"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /specialGames/{specialGameId}:
+    get:
+      tags:
+        - SpecialGames
+      summary: Get special game by ID
+      parameters:
+        - schema:
+            type: string
+            format: uuid
+          required: true
+          name: specialGameId
+          in: path
+      responses:
+        "200":
+          description: Special game found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SingleSpecialGameResponse"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Resource not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    patch:
+      tags:
+        - SpecialGames
+      summary: Patch special game by ID
+      parameters:
+        - schema:
+            type: string
+            format: uuid
+          required: true
+          name: specialGameId
+          in: path
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SpecialGameUpdate"
+      responses:
+        "200":
+          description: Special game updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SingleSpecialGameResponse"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Resource not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    delete:
+      tags:
+        - SpecialGames
+      summary: Delete special game by ID
+      parameters:
+        - schema:
+            type: string
+            format: uuid
+          required: true
+          name: specialGameId
+          in: path
+      responses:
+        "204":
+          description: Special game deleted
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Resource not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /specialGames/{specialGameId}/games:
+    get:
+      tags:
+        - SpecialGames
+      summary: Get games of a special game
+      parameters:
+        - schema:
+            type: string
+            format: uuid
+          required: true
+          name: specialGameId
+          in: path
+        - schema:
+            type: integer
+            nullable: true
+            minimum: 0
+          required: false
+          name: specialGameRoundIndex
+          in: query
+        - schema:
+            type: integer
+            minimum: 0
+            exclusiveMinimum: true
+          required: false
+          name: page
+          in: query
+        - schema:
+            type: integer
+            minimum: 0
+            exclusiveMinimum: true
+            maximum: 1000
+            default: 10
+          required: false
+          name: pagesize
+          in: query
+        - schema:
+            type: string
+          required: false
+          name: keyword
+          in: query
+      responses:
+        "200":
+          description: List of special game games
+          content:
+            application/json:
+              schema:
+                anyOf:
+                  - $ref: "#/components/schemas/MultiGameResponse"
+                  - $ref: "#/components/schemas/PaginatedGameResponse"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Resource not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /specialGames/{specialGameId}/players:
+    get:
+      tags:
+        - SpecialGames
+      summary: Get players of a special game
+      parameters:
+        - schema:
+            type: string
+            format: uuid
+          required: true
+          name: specialGameId
+          in: path
+        - schema:
+            type: integer
+            minimum: 0
+            exclusiveMinimum: true
+          required: false
+          name: page
+          in: query
+        - schema:
+            type: integer
+            minimum: 0
+            exclusiveMinimum: true
+            maximum: 1000
+            default: 10
+          required: false
+          name: pagesize
+          in: query
+        - schema:
+            type: string
+          required: false
+          name: keyword
+          in: query
+      responses:
+        "200":
+          description: List of special game players
+          content:
+            application/json:
+              schema:
+                anyOf:
+                  - $ref: "#/components/schemas/MultiPlayerNormalResponse"
+                  - $ref: "#/components/schemas/PaginatedPlayerNormalResponse"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Resource not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /specialGames/{specialGameId}/leaderboard:
+    get:
+      tags:
+        - SpecialGames
+      summary: Get leaderboard of a special game (optionally for a specific round)
+      parameters:
+        - schema:
+            type: string
+            format: uuid
+          required: true
+          name: specialGameId
+          in: path
+        - schema:
+            type: integer
+            minimum: 0
+            exclusiveMinimum: true
+          required: false
+          name: page
+          in: query
+        - schema:
+            type: integer
+            minimum: 0
+            exclusiveMinimum: true
+            maximum: 1000
+            default: 10
+          required: false
+          name: pagesize
+          in: query
+        - schema:
+            type: string
+          required: false
+          name: keyword
+          in: query
+        - schema:
+            type: integer
+            nullable: true
+            minimum: 0
+          required: false
+          name: specialGameRoundIndex
+          in: query
+      responses:
+        "200":
+          description: List of special game leaderboard entries
+          content:
+            application/json:
+              schema:
+                anyOf:
+                  - $ref: "#/components/schemas/MultiSpecialGameResultResponse"
+                  - $ref: "#/components/schemas/PaginatedSpecialGameResultResponse"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Resource not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /tournaments:
+    get:
+      tags:
+        - Tournaments
+      summary: Get all tournaments
+      parameters:
+        - schema:
+            type: string
+          required: false
+          name: timeControl
+          in: query
+        - schema:
+            type: integer
+            minimum: 1
+          required: false
+          name: tcMinutes
+          in: query
+        - schema:
+            type: integer
+            nullable: true
+            minimum: 0
+          required: false
+          name: tcBonus
+          in: query
+        - schema:
+            type: boolean
+            nullable: true
+          required: false
+          name: isAvailable
+          in: query
+        - schema:
+            type: integer
+            minimum: 0
+            exclusiveMinimum: true
+          required: false
+          name: page
+          in: query
+        - schema:
+            type: integer
+            minimum: 0
+            exclusiveMinimum: true
+            maximum: 1000
+            default: 10
+          required: false
+          name: pagesize
+          in: query
+        - schema:
+            type: string
+          required: false
+          name: keyword
+          in: query
+      responses:
+        "200":
+          description: A list of tournaments
+          content:
+            application/json:
+              schema:
+                anyOf:
+                  - $ref: "#/components/schemas/MultiTournamentResponse"
+                  - $ref: "#/components/schemas/PaginatedTournamentResponse"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    post:
+      tags:
+        - Tournaments
+      summary: Create a new tournament
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TournamentCreate"
+      responses:
+        "201":
+          description: Tournament created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SingleTournamentResponse"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /tournaments/{tournamentId}:
+    get:
+      tags:
+        - Tournaments
+      summary: Get tournament by ID
+      parameters:
+        - schema:
+            type: string
+            format: uuid
+          required: true
+          name: tournamentId
+          in: path
+      responses:
+        "200":
+          description: Tournament found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SingleTournamentResponse"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Resource not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    patch:
+      tags:
+        - Tournaments
+      summary: Patch tournament by ID
+      parameters:
+        - schema:
+            type: string
+            format: uuid
+          required: true
+          name: tournamentId
+          in: path
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TournamentUpdate"
+      responses:
+        "200":
+          description: Tournament updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SingleTournamentResponse"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Resource not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    delete:
+      tags:
+        - Tournaments
+      summary: Delete tournament by ID
+      parameters:
+        - schema:
+            type: string
+            format: uuid
+          required: true
+          name: tournamentId
+          in: path
+      responses:
+        "204":
+          description: Tournament deleted
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Resource not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /tournaments/{tournamentId}/games:
+    get:
+      tags:
+        - Tournaments
+      summary: Get games of a tournament
+      parameters:
+        - schema:
+            type: string
+            format: uuid
+          required: true
+          name: tournamentId
+          in: path
+        - schema:
+            type: integer
+            nullable: true
+            minimum: 0
+          required: false
+          name: tournamentRoundIndex
+          in: query
+        - schema:
+            type: integer
+            minimum: 0
+            exclusiveMinimum: true
+          required: false
+          name: page
+          in: query
+        - schema:
+            type: integer
+            minimum: 0
+            exclusiveMinimum: true
+            maximum: 1000
+            default: 10
+          required: false
+          name: pagesize
+          in: query
+        - schema:
+            type: string
+          required: false
+          name: keyword
+          in: query
+      responses:
+        "200":
+          description: List of tournament games
+          content:
+            application/json:
+              schema:
+                anyOf:
+                  - $ref: "#/components/schemas/MultiGameResponse"
+                  - $ref: "#/components/schemas/PaginatedGameResponse"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Resource not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /tournaments/{tournamentId}/players:
+    get:
+      tags:
+        - Tournaments
+      summary: Get players of a tournament
+      parameters:
+        - schema:
+            type: string
+            format: uuid
+          required: true
+          name: tournamentId
+          in: path
+        - schema:
+            type: integer
+            minimum: 0
+            exclusiveMinimum: true
+          required: false
+          name: page
+          in: query
+        - schema:
+            type: integer
+            minimum: 0
+            exclusiveMinimum: true
+            maximum: 1000
+            default: 10
+          required: false
+          name: pagesize
+          in: query
+        - schema:
+            type: string
+          required: false
+          name: keyword
+          in: query
+      responses:
+        "200":
+          description: List of tournament players
+          content:
+            application/json:
+              schema:
+                anyOf:
+                  - $ref: "#/components/schemas/MultiPlayerNormalResponse"
+                  - $ref: "#/components/schemas/PaginatedPlayerNormalResponse"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Resource not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /tournaments/{tournamentId}/leaderboard:
+    get:
+      tags:
+        - Tournaments
+      summary: Get leaderboard of a tournament (optionally for a specific round)
+      parameters:
+        - schema:
+            type: string
+            format: uuid
+          required: true
+          name: tournamentId
+          in: path
+        - schema:
+            type: integer
+            minimum: 0
+            exclusiveMinimum: true
+          required: false
+          name: page
+          in: query
+        - schema:
+            type: integer
+            minimum: 0
+            exclusiveMinimum: true
+            maximum: 1000
+            default: 10
+          required: false
+          name: pagesize
+          in: query
+        - schema:
+            type: string
+          required: false
+          name: keyword
+          in: query
+        - schema:
+            type: integer
+            nullable: true
+            minimum: 0
+          required: false
+          name: tournamentRoundIndex
+          in: query
+      responses:
+        "200":
+          description: List of tournament leaderboard entries
+          content:
+            application/json:
+              schema:
+                anyOf:
+                  - $ref: "#/components/schemas/MultiTournamentResultResponse"
+                  - $ref: "#/components/schemas/PaginatedTournamentResultResponse"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Resource not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
